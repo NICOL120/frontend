@@ -21,11 +21,20 @@
 export type Uint128 = string;
 
 /**
- * SimulationResponse returns swap simulation response
+ * This structure holds the parameters that are returned from a swap simulation response
  */
 export interface SimulationResponse {
+  /**
+   * The amount of fees charged by the transaction
+   */
   commission_amount: Uint128;
+  /**
+   * The amount of ask assets returned by the swap
+   */
   return_amount: Uint128;
+  /**
+   * The spread used in the swap operation
+   */
   spread_amount: Uint128;
   [k: string]: unknown;
 }

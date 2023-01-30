@@ -1,12 +1,12 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { TerrajsService } from '../services/terrajs.service';
-import { Clipboard } from '@angular/cdk/clipboard';
-import { ModalService } from '../services/modal.service';
-import { TruncatePipe } from '../pipes/truncate.pipe';
-import { InfoService } from '../services/info.service';
-import { Subscription, switchMap, tap } from 'rxjs';
-import { MdbDropdownDirective } from 'mdb-angular-ui-kit/dropdown';
-import { TnsNameService } from '../services/api/tns-name.service';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {TerrajsService} from '../services/terrajs.service';
+import {Clipboard} from '@angular/cdk/clipboard';
+import {ModalService} from '../services/modal.service';
+import {TruncatePipe} from '../pipes/truncate.pipe';
+import {InfoService} from '../services/info.service';
+import {Subscription, switchMap, tap} from 'rxjs';
+import {MdbDropdownDirective} from 'mdb-angular-ui-kit/dropdown';
+import {WasmService} from '../services/api/wasm.service';
 
 @Component({
   selector: 'app-menubar',
@@ -16,6 +16,10 @@ import { TnsNameService } from '../services/api/tns-name.service';
 export class MenubarComponent implements OnInit, OnDestroy {
 
   @ViewChild('dropdown') dropdown: MdbDropdownDirective;
+  tradeSpecUrl = `https://app.astroport.fi/swap?from=${this.terrajs.settings.axlUsdcToken}&to=${this.terrajs.settings.specToken}`;
+  walletText = 'Connect Wallet';
+  tnsName = null;
+  private processes: Subscription;
 
   constructor(
     public terrajs: TerrajsService,
@@ -23,13 +27,9 @@ export class MenubarComponent implements OnInit, OnDestroy {
     private clipboard: Clipboard,
     private modelService: ModalService,
     private truncate: TruncatePipe,
-    private tnsNameService: TnsNameService,
-  ) { }
-
-  private processes: Subscription;
-
-  walletText = 'Connect Wallet';
-  tnsName = null;
+    private wasm: WasmService
+  ) {
+  }
 
   async ngOnInit() {
     // NOTE : Create a composite subscription, we will compose everything into it and unsub everything once on destroy.
@@ -39,7 +39,6 @@ export class MenubarComponent implements OnInit, OnDestroy {
         tap(async (connected) => {
           if (connected) {
             this.walletText = this.getWalletText();
-            this.getTNSName().then(tnsName => this.tnsName = tnsName);
           } else {
             this.walletText = 'Connect Wallet';
           }
@@ -55,39 +54,20 @@ export class MenubarComponent implements OnInit, OnDestroy {
             this.walletText = 'Please install Terra Station';
           } else if (this.terrajs.isConnected) {
             this.walletText = this.getWalletText();
-            this.getTNSName().then(tnsName => this.tnsName = tnsName);
-            await this.info.refreshBalance({ native_token: true, spec: true });
+            await this.info.refreshBalance({native_token: true, spec: true});
           }
         })
       ).subscribe()
     );
   }
 
-  private async initWallet(): Promise<boolean> {
-    return await this.terrajs.checkInstalled();
-  }
-
   ngOnDestroy(): void {
     this.processes.unsubscribe();
-  }
-
-  private getWalletText() {
-    return this.truncate.transform(this.terrajs.address);
-  }
-
-  private async getTNSName() {
-    const { name } = await this.tnsNameService.query({
-      get_name: {
-        address: this.terrajs.address
-      }
-    });
-    return this.truncate.transform(name);
   }
 
   async connect() {
     await this.terrajs.connect();
     this.walletText = this.getWalletText();
-    this.getTNSName().then(tnsName => this.tnsName = tnsName);
   }
 
   async disconnect() {
@@ -101,9 +81,12 @@ export class MenubarComponent implements OnInit, OnDestroy {
     this.dropdown.hide();
   }
 
-  async copyTNS() {
-    this.clipboard.copy(this.tnsName);
-    this.modelService.notify('TNS address copied');
-    this.dropdown.hide();
+  private async initWallet(): Promise<boolean> {
+    return await this.terrajs.checkInstalled();
   }
+
+  private getWalletText() {
+    return this.truncate.transform(this.terrajs.address);
+  }
+
 }

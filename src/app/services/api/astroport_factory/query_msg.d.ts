@@ -5,6 +5,9 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes the available query messages for the factory contract.
+ */
 export type QueryMsg =
   | {
       config: {
@@ -13,23 +16,43 @@ export type QueryMsg =
     }
   | {
       pair: {
+        /**
+         * The assets for which we return a pair
+         */
         asset_infos: [AssetInfo, AssetInfo];
         [k: string]: unknown;
       };
     }
   | {
       pairs: {
+        /**
+         * The number of pairs to read and return. It is an [`Option`] type.
+         */
         limit?: number | null;
+        /**
+         * The pair item to start reading from. It is an [`Option`] type that accepts two [`AssetInfo`] elements.
+         */
         start_after?: [AssetInfo, AssetInfo] | null;
         [k: string]: unknown;
       };
     }
   | {
       fee_info: {
+        /**
+         * The pair type for which we return fee information. Pair type is a [`PairType`] struct
+         */
         pair_type: PairType;
         [k: string]: unknown;
       };
+    }
+  | {
+      blacklisted_pair_types: {
+        [k: string]: unknown;
+      };
     };
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {
@@ -53,6 +76,9 @@ export type AssetInfo =
  * This type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.
  */
 export type Addr = string;
+/**
+ * This enum describes available pair types. ## Available pool types ``` # use astroport::factory::PairType::{Custom, Stable, Xyk}; Xyk {}; Stable {}; Custom(String::from("Custom")); ```
+ */
 export type PairType =
   | {
       xyk: {

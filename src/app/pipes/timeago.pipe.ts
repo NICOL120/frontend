@@ -6,7 +6,7 @@ import * as timeago from 'timeago.js';
 })
 export class TimeagoPipe implements PipeTransform {
 
-  transform(value: Date) {
+  transform(value: string | number) {
     if (!value) {
       return null;
     }

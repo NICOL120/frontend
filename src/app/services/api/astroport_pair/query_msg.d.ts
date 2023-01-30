@@ -5,6 +5,9 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes the query messages available in the contract.
+ */
 export type QueryMsg =
   | {
       pair: {
@@ -29,13 +32,13 @@ export type QueryMsg =
     }
   | {
       simulation: {
-        offer_asset: Asset;
+        offer_asset: Description;
         [k: string]: unknown;
       };
     }
   | {
       reverse_simulation: {
-        ask_asset: Asset;
+        ask_asset: Description;
         [k: string]: unknown;
       };
     }
@@ -58,6 +61,9 @@ export type QueryMsg =
  * let c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```
  */
 export type Uint128 = string;
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {
@@ -82,8 +88,17 @@ export type AssetInfo =
  */
 export type Addr = string;
 
-export interface Asset {
+/**
+ * This enum describes a Terra asset (native or CW20).
+ */
+export interface Description {
+  /**
+   * A token amount
+   */
   amount: Uint128;
+  /**
+   * Information about an asset stored in a [`AssetInfo`] struct
+   */
   info: AssetInfo;
   [k: string]: unknown;
 }

@@ -5,6 +5,9 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes a CW20 hook message.
+ */
 export type Cw20HookMsg =
   | {
       swap: {

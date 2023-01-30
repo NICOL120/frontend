@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { RewardInfoResponseItem } from '../services/api/mirror_farm/reward_info_response';
+import {RewardInfoResponseItem} from '../services/farm_info/farm-info.service';
 
 // const secondsPerYear = 365 * 24 * 60 * 60;
 

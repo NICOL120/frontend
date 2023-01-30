@@ -1,7 +1,7 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {Coin, LCDClient, Msg, SyncTxBroadcastResult} from '@terra-money/terra.js';
 import {ISettings, networks} from '../consts/networks';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, firstValueFrom, interval, Subject, Subscription} from 'rxjs';
 import {filter, startWith} from 'rxjs/operators';
 import {
@@ -10,7 +10,7 @@ import {
   WalletController,
   WalletInfo,
   WalletStates,
-  WalletStatus
+  WalletStatus,
 } from '@terra-money/wallet-provider';
 import {ModalService} from './modal.service';
 import {throttleAsync} from 'utils-decorators';
@@ -18,7 +18,7 @@ import {MdbModalService} from 'mdb-angular-ui-kit/modal';
 import BigNumber from 'bignumber.js';
 
 export const BLOCK_TIME = 6500; // 6.5s
-export const DEFAULT_NETWORK = 'classic';
+export const DEFAULT_NETWORK = 'mainnet';
 
 export type Result = SyncTxBroadcastResult.Data;
 
@@ -34,11 +34,6 @@ export interface GetResponse {
   query_result: object;
 }
 
-export interface GetResponseOld {
-  height: number;
-  result: object;
-}
-
 export interface NetworkInfo {
   name: string;
   chainID: string;
@@ -49,11 +44,6 @@ export interface NetworkInfo {
 
 export interface ExecuteOptions {
   coin?: Coin.Data;
-}
-
-export interface PostOptions {
-  confirmMsg?: string;
-  tax?: Coin;
 }
 
 interface ConnectedState {
@@ -82,6 +72,7 @@ export class TerrajsService implements OnDestroy {
   private height = 0;
   private posting = false;
   private subscription: Subscription;
+  isReadOnly = false;
 
   constructor(
     private httpClient: HttpClient,
@@ -101,6 +92,10 @@ export class TerrajsService implements OnDestroy {
     this.subscription = this.heightChanged.subscribe(() => this.height++);
   }
 
+  get isMainnet() {
+    return this.networkName === 'mainnet';
+  }
+
   ngOnDestroy() {
     this.subscription.unsubscribe();
   }
@@ -112,8 +107,7 @@ export class TerrajsService implements OnDestroy {
 
   async getConnectTypes() {
     const types = firstValueFrom((await this.getWalletController()).availableConnectTypes());
-    return (await types).filter(t => t !== 'READONLY');
-  }
+    return (await types).filter(t => t !== 'READONLY');  }
 
   @throttleAsync(1) // to prevent first time getHeight from calling API tendermint.blockInfo() simultaneously
   async getHeight(force?: boolean): Promise<number> {
@@ -132,7 +126,7 @@ export class TerrajsService implements OnDestroy {
   }
 
   async initLcdClient() {
-    const gasPrices = await this.httpClient.get<Record<string, string>>(`${this.settings.fcd}/v1/txs/gas_prices`).toPromise();
+    const gasPrices = await firstValueFrom(this.httpClient.get<Record<string, string>>(`${this.settings.fcd}/v1/txs/gas_prices`));
     this.lcdClient = new LCDClient({
       URL: this.settings.lcd,
       chainID: this.settings.chainID,
@@ -146,9 +140,8 @@ export class TerrajsService implements OnDestroy {
       return;
     }
     let terra_extension_router_session: any;
-    let address: string;
     const connectTypes = await this.getConnectTypes();
-    if (auto) {
+    if (auto) { // AUTO CONNECT AFTER APP INIT
       const terra_extension_router_session_raw = localStorage.getItem('__terra_extension_router_session__');
       const connect = localStorage.getItem('connect');
       if (!connect) {
@@ -159,25 +152,37 @@ export class TerrajsService implements OnDestroy {
           type: connect,
           identifier: null
         };
+      } else if (connect === 'READONLY_CUSTOM_IMP'){
+        const viewonly_state_raw = localStorage.getItem('readonly_state');
+        connectCallbackData = {
+          stateReadOnly: JSON.parse(viewonly_state_raw),
+          type: connect
+        };
+        this.isReadOnly = true;
+        await this.finalConnectStep(connectCallbackData.stateReadOnly, connectCallbackData.type);
       } else {
         terra_extension_router_session = JSON.parse(terra_extension_router_session_raw);
         connectCallbackData = terra_extension_router_session;
         connectCallbackData.type = connect;
       }
-      address = localStorage.getItem('address');
-    } else {
+    } else { // CLICK CONNECT
       const installTypes = await firstValueFrom(this.walletController.availableInstallTypes());
       const types = connectTypes.concat(installTypes);
       const modal = await import('./connect-options/connect-options.component');
       const ref = this.modalService.open(modal.ConnectOptionsComponent, {
         data: {types}
       });
-      connectCallbackData = await ref.onClose.toPromise();
-      if (!connectCallbackData.type) {
+      connectCallbackData = await firstValueFrom(ref.onClose);
+      if (!connectCallbackData?.type) {
         throw new Error('Nothing selected');
       }
+      if (connectCallbackData.type === 'READONLY_CUSTOM_IMP' && connectCallbackData.stateReadOnly){
+        this.isReadOnly = true;
+        await this.finalConnectStep(connectCallbackData.stateReadOnly, connectCallbackData.type);
+        return;
+      }
     }
-
+    // STEP 2
     if (!connectTypes.includes(connectCallbackData.type as ConnectType)) {
       if (auto) {
         return;
@@ -188,86 +193,74 @@ export class TerrajsService implements OnDestroy {
       await this.walletController.connect(connectCallbackData.type, connectCallbackData.identifier);
     }
     const state: ConnectedState = await firstValueFrom(this.walletController.states()
-      .pipe(filter((it: WalletStates) => it.status === WalletStatus.WALLET_CONNECTED)));
-    let wallet: WalletInfo;
-    if (state.wallets.length === 0) {
+      .pipe(filter((it: WalletStates) => it.status === WalletStatus.WALLET_CONNECTED))); // ONLY EXTENSION AND WALLET CONNECT, NOT CUSTOM READ ONLY
+    await this.finalConnectStep(state, connectCallbackData.type);
+  }
 
-      this.modal.alert('No wallet, please setup wallet first', {iconType: 'danger'});
-      throw new Error('No wallet');
-    } else if (state.wallets.length === 1) {
-      wallet = state.wallets[0];
-    } else {
-      if (address) {
-        wallet = state.wallets.find(it => it.terraAddress === address);
-      }
-      if (!wallet) {
-        const modal = await import('./wallet-options/wallet-options.component');
-        const ref = this.modalService.open(modal.WalletOptionsComponent, {
-          data: {
-            wallets: state.wallets
-          }
-        });
-        wallet = await ref.onClose.toPromise();
-      }
+  async finalConnectStep(state: ConnectedState, connectType){
+    const networkNameFromWallet = state.network.name === 'classic' ? 'mainnet' : state.network.name;
+    this.settings = networks[networkNameFromWallet];
+    if (!this.lcdClient || this.networkName !== state.network.name) {
+      await this.initLcdClient();
     }
     this.address = state.wallets[0].terraAddress;
     this.network = state.network;
     this.extensionCurrentNetworkName = this.network.name;
-    this.networkName = this.network.name === 'mainnet' ? 'classic' : this.network.name;
-    this.settings = networks[this.networkName];
+    this.networkName = networkNameFromWallet;
 
-    await this.initLcdClient();
-
+    localStorage.setItem('connect', connectType);
+    if (this.isReadOnly){
+      localStorage.setItem('readonly_state', JSON.stringify(state));
+    }
     this.isConnected = true;
     this.connected.next(true);
-    localStorage.setItem('connect', connectCallbackData.type);
-    localStorage.setItem('address', this.address);
   }
+
+  // @throttleAsync(20)
+  // async get(path: string, params?: Record<string, string>, additionalHeaders?: Record<string, string>) {
+  //   // const headers = new HttpHeaders({ 'Cache-Control': 'no-cache', 'Content-Type': 'application/json' });
+  //   const headers = new HttpHeaders({'Content-Type': 'application/json'});
+  //   if (additionalHeaders) {
+  //     const keys = Object.keys(additionalHeaders);
+  //     for (const key of keys) {
+  //       headers.append(key, additionalHeaders[key]);
+  //     }
+  //   }
+  //
+  //   if (this.USE_NEW_BASE64_API) {
+  //     const res = await this.httpClient.get<GetResponse>(`${this.settings.lcd}/${path}`, {
+  //       params,
+  //       headers,
+  //     }).toPromise();
+  //     return res.query_result as any;
+  //   } else {
+  //     const res = await this.httpClient.get<GetResponseOld>(`${this.settings.lcd}/${path}`, {
+  //       params,
+  //       headers,
+  //     }).toPromise();
+  //     this.height = +res.height;
+  //     return res.result as any;
+  //   }
+  // }
 
   disconnect() {
     this.walletController.disconnect();
     localStorage.removeItem('rewardInfos');
     localStorage.removeItem('connect');
     localStorage.removeItem('address');
+    localStorage.removeItem('readonly_state');
     location.reload();
   }
 
-  @throttleAsync(20)
-  async get(path: string, params?: Record<string, string>, additionalHeaders?: Record<string, string>) {
-    // const headers = new HttpHeaders({ 'Cache-Control': 'no-cache', 'Content-Type': 'application/json' });
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
-    if (additionalHeaders) {
-      const keys = Object.keys(additionalHeaders);
-      for (const key of keys) {
-        headers.append(key, additionalHeaders[key]);
-      }
-    }
-
-    if (this.USE_NEW_BASE64_API) {
-      const res = await this.httpClient.get<GetResponse>(`${this.settings.lcd}/${path}`, {
-        params,
-        headers,
-      }).toPromise();
-      return res.query_result as any;
-    } else {
-      const res = await this.httpClient.get<GetResponseOld>(`${this.settings.lcd}/${path}`, {
-        params,
-        headers,
-      }).toPromise();
-      this.height = +res.height;
-      return res.result as any;
-    }
-  }
-
   async getFCD(path: string, params?: Record<string, string>, headers?: Record<string, string>) {
-    const res = await this.httpClient.get<GetResponse>(`${this.settings.fcd}/${path}`, {
+    const res = await firstValueFrom(this.httpClient.get<GetResponse>(`${this.settings.fcd}/${path}`, {
       params,
       headers,
-    }).toPromise();
+    }));
     return res as any;
   }
 
-  async post(msgs: Msg[] | Msg, opts?: PostOptions) {
+  async post(msgs: Msg[] | Msg, confirmMsg?: string) {
     if (this.posting) {
       return;
     }
@@ -279,11 +272,10 @@ export class TerrajsService implements OnDestroy {
         ignoreBackdropClick: true,
         data: {
           msgs: msgs instanceof Array ? msgs : [msgs],
-          confirmMsg: opts?.confirmMsg,
-          tax: opts?.tax,
+          confirmMsg
         }
       });
-      const result = await ref.onClose.toPromise();
+      const result = await firstValueFrom(ref.onClose);
       if (!result) {
         throw new Error('Transaction canceled');
       }
@@ -310,19 +302,6 @@ export class TerrajsService implements OnDestroy {
       tax = new BigNumber(taxCap.amount.toString());
     }
     return num.minus(tax).toString();
-  }
-
-  async addTax(denom: string, amount: string) {
-    const [taxRate, taxCap] = await Promise.all([
-      this.lcdClient.treasury.taxRate(),
-      this.lcdClient.treasury.taxCap(denom)
-    ]);
-    const num = new BigNumber(amount);
-    let tax = num.dividedBy(1 - taxRate.toNumber()).integerValue(BigNumber.ROUND_UP);
-    if (tax.gt(taxCap.amount.toString())) {
-      tax = new BigNumber(taxCap.amount.toString());
-    }
-    return num.plus(tax).toString();
   }
 
   private async getWalletController() {

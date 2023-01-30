@@ -5,7 +5,13 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure holds the parameters used for creating a contract.
+ */
 export interface InstantiateMsg {
+  /**
+   * The astroport factory contract address
+   */
   astroport_factory: string;
   [k: string]: unknown;
 }

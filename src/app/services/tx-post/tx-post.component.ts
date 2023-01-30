@@ -1,14 +1,15 @@
-import {HttpClient} from '@angular/common/http';
-import {Component, OnInit} from '@angular/core';
-import {Coin, CreateTxOptions, Fee, Msg, SignerOptions, Tx} from '@terra-money/terra.js';
-import {CONFIG} from '../../consts/config';
-import {TerrajsService} from '../terrajs.service';
-import {GoogleAnalyticsService} from 'ngx-google-analytics';
-import {MdbModalRef} from 'mdb-angular-ui-kit/modal';
-import {InfoService} from '../info.service';
+import { HttpClient } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { CreateTxOptions, Fee, Msg, SignerOptions, Tx } from '@terra-money/terra.js';
+import { CONFIG } from '../../consts/config';
+import { TerrajsService } from '../terrajs.service';
+import { GoogleAnalyticsService } from 'ngx-google-analytics';
+import { MdbModalRef } from 'mdb-angular-ui-kit/modal';
+import { InfoService } from '../info.service';
 import BigNumber from 'bignumber.js';
-import {Denom} from '../../consts/denom';
-import { plus } from 'src/app/libs/math';
+import { Denom } from '../../consts/denom';
+import { BalancePipe } from '../../pipes/balance.pipe';
+import { times } from "../../libs/math";
 
 @Component({
   selector: 'app-tx-post',
@@ -31,10 +32,10 @@ export class TxPostComponent implements OnInit {
   userGasLimit: string;
   gasLimit: number;
   fee: string;
-  feeUST: string;
+  feeUSD: string;
   coins: string[];
   isEnoughFee = true;
-  selectedCoin = Denom.USD;
+  selectedCoin = Denom.LUNA;
   gasBuffer = 70;
   ngx_slider_option = {
     animate: false,
@@ -45,14 +46,14 @@ export class TxPostComponent implements OnInit {
     showTicksValues: false,
     hideLimitLabels: true,
   };
-  tax: Coin;
 
   constructor(
     private httpClient: HttpClient,
     private modalRef: MdbModalRef<TxPostComponent>,
     private terrajs: TerrajsService,
     protected $gaService: GoogleAnalyticsService,
-    private info: InfoService
+    private info: InfoService,
+    private balancePipe: BalancePipe
   ) {
   }
 
@@ -62,7 +63,7 @@ export class TxPostComponent implements OnInit {
         throw new Error('please connect your wallet');
       }
       if (this.terrajs.extensionCurrentNetworkName !== this.terrajs.networkName) {
-        throw new Error('Please switch to classic network in Terra Station and reconnect wallet again.');
+        throw new Error('Please switch to mainnet network, not classic in Terra Station and reconnect wallet again.');
       }
 
       // ensure native token balances
@@ -87,7 +88,7 @@ export class TxPostComponent implements OnInit {
       this.coins = Object.keys(this.info.tokenBalances)
         .filter(it => this.terrajs.lcdClient.config.gasPrices[it]);
       if (!this.coins.length) {
-        this.coins.push(Denom.USD);
+        this.coins.push(Denom.LUNA);
       }
       if (!this.coins.includes(this.selectedCoin)) {
         this.selectedCoin = this.coins[0];
@@ -95,23 +96,13 @@ export class TxPostComponent implements OnInit {
 
       // simulate
       this.loadingMsg = 'Simulating...';
-      const singerOptions: SignerOptions[] = [{address: this.terrajs.address}];
+      const singerOptions: SignerOptions[] = [{ address: this.terrajs.address }];
       this.signMsg = await this.terrajs.lcdClient.tx.create(singerOptions, {
         msgs: this.msgs,
-        feeDenoms: [Denom.USD],
+        feeDenoms: [Denom.LUNA],
       });
       this.gasLimit = this.signMsg.auth_info.fee.gas_limit;
       this.calculateFee();
-      // const taxAndGas = +this.signMsg.fee.amount.get(Denom.USD).amount?.toNumber() || 0;
-      // const uusdToBeSent = +this.msgs[this.msgs.length - 1]?.['coins']?.get(Denom.USD)?.amount?.toNumber() || 0;
-      // const uusdAfterTx = +this.infoService.userUstAmount * CONFIG.UNIT - taxAndGas - uusdToBeSent;
-      // if (taxAndGas + uusdToBeSent > +this.infoService.userUstAmount * CONFIG.UNIT){
-      //   throw {
-      //     message: `UST amount sent plus fee of ${+taxAndGas / CONFIG.UNIT} UST exceeds your available UST.`
-      //   };
-      // } else if (+uusdAfterTx < 2 * CONFIG.UNIT){
-      //   this.confirmMsg = `You will have ${uusdAfterTx / CONFIG.UNIT} UST after this transaction which may not be enough for next transactions. Continue to proceed?`;
-      // }
 
     } catch (e) {
       console.error(e);
@@ -121,15 +112,6 @@ export class TxPostComponent implements OnInit {
     } finally {
       this.loading = false;
     }
-    // this.signMsg = StdSignMsg.fromData({
-    //   account_number: this.terrajs.address,
-    //   chain_id: this.terrajs.network.chainID,
-    //   fee: { gas: '500000', amount: [{ denom: Denom.USD, amount: '75000'}] },
-    //   memo: '',
-    //   msgs: this.msgs.map(it => it.toData()),
-    //   sequence: '',
-    // });
-    // this.loading = false;
   }
 
   calculateFee() {
@@ -141,12 +123,7 @@ export class TxPostComponent implements OnInit {
       .times(this.terrajs.lcdClient.config.gasPrices[this.selectedCoin])
       .integerValue(BigNumber.ROUND_UP)
       .toString();
-    if (this.selectedCoin !== Denom.USD) {
-      this.terrajs.lcdClient.market.swapRate(Coin.fromData({
-        denom: this.selectedCoin,
-        amount: this.fee,
-      }), Denom.USD).then(it => this.feeUST = it.amount.toString());
-    }
+    this.feeUSD = times(this.fee, this.info.ulunaUSDPrice);
     this.isEnoughFee = +this.info.tokenBalances[this.selectedCoin] >= +this.fee;
   }
 
@@ -159,21 +136,19 @@ export class TxPostComponent implements OnInit {
         }));
       } catch (e) {
       }
+      if (this.terrajs.isReadOnly){
+        throw { message: 'Wallet connected in read only mode.', data: null };
+      }
       this.loading = true;
       this.loadingMsg = 'Broadcasting...';
-
-      const feeDenom = this.selectedCoin;
-      const feeAmount = this.fee;
-      const amount = !this.tax
-        ? [{ denom: feeDenom, amount: feeAmount }]
-        : this.tax.denom === feeDenom
-        ? [{ denom: feeDenom, amount: plus(feeAmount, this.tax.amount.toString()) }]
-        : [{ denom: feeDenom, amount: feeAmount }, { denom: this.tax.denom, amount: this.tax.amount.toString() }];
       const postMsg: CreateTxOptions = {
         msgs: this.msgs,
         fee: Fee.fromData({
           gas_limit: this.userGasLimit,
-          amount,
+          amount: [{
+            denom: this.selectedCoin,
+            amount: this.fee,
+          }],
           payer: undefined,
           granter: undefined,
         }),
@@ -181,7 +156,7 @@ export class TxPostComponent implements OnInit {
       };
       const res = await this.terrajs.walletController.post(postMsg);
       this.txhash = res.result.txhash;
-      this.link = this.txhash && `https://${this.terrajs.settings.finder}/${this.terrajs.networkName}/tx/${this.txhash}`;
+      this.link = this.txhash && `${this.terrajs.settings.finder}/${this.terrajs.networkName}/tx/${this.txhash}`;
       if (!res.success) {
         throw res;
       }
@@ -189,14 +164,14 @@ export class TxPostComponent implements OnInit {
 
       this.loadingMsg = 'Waiting for result...';
       do {
-        const res2 = await this.httpClient.get<any>(`${this.terrajs.settings.fcd}/v1/tx/${this.txhash}`,
+        const res2 = await this.httpClient.get<any>(`${this.terrajs.settings.lcd}/cosmos/tx/v1beta1/txs/${this.txhash}`,
           {
             observe: 'response',
           })
           .toPromise().catch(e => e);
         if (res2.ok) {
           if (res2.body?.code || res2.body?.error) {
-            throw {message: 'Transaction failed', data: res2.body.code || res2.body.error};
+            throw { message: 'Transaction failed', data: res2.body.code || res2.body.error };
           }
           break;
         } else {

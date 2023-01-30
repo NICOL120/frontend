@@ -1,7 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { InfoService } from '../../../services/info.service';
-import { Subscription } from 'rxjs';
-import { TerrajsService } from '../../../services/terrajs.service';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {InfoService} from '../../../services/info.service';
+import {Subscription} from 'rxjs';
+import {TerrajsService} from '../../../services/terrajs.service';
 import {FarmInfoService} from '../../../services/farm_info/farm-info.service';
 import {MdbModalRef} from 'mdb-angular-ui-kit/modal';
 import {Color} from '@swimlane/ngx-charts';
@@ -11,10 +11,8 @@ interface ChartData {
   value: number;
 }
 
-
 const specStakedInGov = 'Staked SPEC in Gov';
 const ustFromSPECGov = 'Profit from Staked SPEC';
-const totalStakedInVaults = 'Total rewards';
 
 @Component({
   selector: 'app-your-tvl',
@@ -40,7 +38,8 @@ export class YourTvlComponent implements OnInit, OnDestroy {
     public info: InfoService,
     private terrajs: TerrajsService,
     private modalRef: MdbModalRef<YourTvlComponent>
-  ) { }
+  ) {
+  }
 
   // because totalValueItems input is delayed
   ngOnInit(): void {
@@ -55,7 +54,7 @@ export class YourTvlComponent implements OnInit, OnDestroy {
       });
     this.heightChanged = this.terrajs.heightChanged.subscribe(async _ => {
       // if (this.terrajs.isConnected) {
-        this.refreshChartDataList();
+      this.refreshChartDataList();
       // }
     });
   }
@@ -77,9 +76,8 @@ export class YourTvlComponent implements OnInit, OnDestroy {
       });
     }
 
-    chartDataListTemp.push({ name: totalStakedInVaults, value: this.info.portfolio?.total_reward_ust });
-    chartDataListTemp.push({ name: specStakedInGov, value: this.info.portfolio?.gov.pending_reward_ust });
-    chartDataListTemp.push({ name: ustFromSPECGov, value: this.info.portfolio?.totalGovRewardUST });
+    // chartDataListTemp.push({ name: specStakedInGov, value: this.info.portfolio?.gov.spec_tokens_in_usdc });
+    // chartDataListTemp.push({ name: ustFromSPECGov, value: this.info.portfolio?.totalGovRewardUST });
     this.chartDataList = chartDataListTemp;
   }
 

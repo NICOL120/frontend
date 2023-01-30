@@ -20,16 +20,18 @@ export class QueryBundler {
   ) { }
 
   query(addr: string, msg: any): Promise<any> {
-    return new Promise((ok, ko) => {
-      this.queries.push({
-        query: { addr, msg: toBase64(msg) },
-        ok,
-        ko
-      });
-      if (this.queries.length >= this.maxSize) {
-        this.flush();
-      }
-    });
+    return this.wasm.query(addr, msg);
+    // TODO until there is querier deployed
+    // return new Promise((ok, ko) => {
+    //   this.queries.push({
+    //     query: { addr, msg: toBase64(msg) },
+    //     ok,
+    //     ko
+    //   });
+    //   if (this.queries.length >= this.maxSize) {
+    //     this.flush();
+    //   }
+    // });
   }
 
   flush() {

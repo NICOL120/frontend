@@ -19,6 +19,9 @@
  * let c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```
  */
 export type Uint128 = string;
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {
@@ -43,15 +46,39 @@ export type AssetInfo =
  */
 export type Addr = string;
 
+/**
+ * This structure is used to return a cumulative prices query response.
+ */
 export interface CumulativePricesResponse {
-  assets: [Asset, Asset];
+  /**
+   * The two assets in the pool to query
+   */
+  assets: [Description, Description];
+  /**
+   * The last value for the token0 cumulative price
+   */
   price0_cumulative_last: Uint128;
+  /**
+   * The last value for the token1 cumulative price
+   */
   price1_cumulative_last: Uint128;
+  /**
+   * The total amount of LP tokens currently issued
+   */
   total_share: Uint128;
   [k: string]: unknown;
 }
-export interface Asset {
+/**
+ * This enum describes a Terra asset (native or CW20).
+ */
+export interface Description {
+  /**
+   * A token amount
+   */
   amount: Uint128;
+  /**
+   * Information about an asset stored in a [`AssetInfo`] struct
+   */
   info: AssetInfo;
   [k: string]: unknown;
 }

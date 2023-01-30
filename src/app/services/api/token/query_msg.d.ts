@@ -43,4 +43,14 @@ export type QueryMsg =
         start_after?: string | null;
         [k: string]: unknown;
       };
+    }
+  | {
+      marketing_info: {
+        [k: string]: unknown;
+      };
+    }
+  | {
+      download_logo: {
+        [k: string]: unknown;
+      };
     };

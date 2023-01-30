@@ -5,6 +5,9 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {
@@ -35,21 +38,24 @@ export type Addr = string;
  */
 export type Binary = string;
 
+/**
+ * This structure describes the parameters used for creating a contract.
+ */
 export interface InstantiateMsg {
   /**
-   * Asset infos
+   * Information about the two assets in the pool
    */
   asset_infos: [AssetInfo, AssetInfo];
   /**
-   * Factory contract address
+   * The factory contract address
    */
-  factory_addr: Addr;
+  factory_addr: string;
   /**
    * Optional binary serialised parameters for custom pool types
    */
   init_params?: Binary | null;
   /**
-   * Token contract code id for initialization
+   * The token contract code ID used for the tokens in the pool
    */
   token_code_id: number;
   [k: string]: unknown;

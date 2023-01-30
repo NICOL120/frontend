@@ -5,7 +5,13 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes a custom struct to return a query response containing the base contract configuration.
+ */
 export interface ConfigResponse {
+  /**
+   * The Astroport factory contract address
+   */
   astroport_factory: string;
   [k: string]: unknown;
 }

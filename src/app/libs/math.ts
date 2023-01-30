@@ -1,5 +1,5 @@
 import BN from 'bignumber.js';
-import { CONFIG } from '../consts/config';
+import {CONFIG} from '../consts/config';
 
 export const plus = (a?: BN.Value, b?: BN.Value): string =>
   new BN(a || 0).plus(b || 0).toString();
@@ -53,10 +53,14 @@ export const floorSixDecimal = (input: BN.Value): string =>
   new BN(input).decimalPlaces(CONFIG.DIGIT, BN.ROUND_FLOOR).toString();
 
 
-export const roundSixDecimal = (input: BN.Value): string =>
-  new BN(input).decimalPlaces(CONFIG.DIGIT, BN.ROUND_HALF_UP).toString();
+export const ceilSixDecimal = (input: BN.Value): string =>
+  new BN(input).decimalPlaces(CONFIG.DIGIT, BN.ROUND_UP).toString();
 
 export const floor18Decimal = (input: BN.Value): string => {
   return new BN(input).toFixed(18);
+};
+
+export const isqrt = (input: BN.Value): string => {
+  return new BN(input).sqrt().integerValue().toString();
 };
 

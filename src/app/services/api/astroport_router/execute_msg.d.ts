@@ -5,12 +5,16 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes the execute messages available in the contract.
+ */
 export type ExecuteMsg =
   | {
       receive: Cw20ReceiveMsg;
     }
   | {
       execute_swap_operations: {
+        max_spread?: Decimal | null;
         minimum_receive?: Uint128 | null;
         operations: SwapOperation[];
         to?: Addr | null;
@@ -19,6 +23,7 @@ export type ExecuteMsg =
     }
   | {
       execute_swap_operation: {
+        max_spread?: Decimal | null;
         operation: SwapOperation;
         to?: string | null;
         [k: string]: unknown;
@@ -53,21 +58,45 @@ export type Uint128 = string;
  * This is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>
  */
 export type Binary = string;
+/**
+ * A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0
+ *
+ * The greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)
+ */
+export type Decimal = string;
+/**
+ * This enum describes a swap operation.
+ */
 export type SwapOperation =
   | {
       native_swap: {
+        /**
+         * The name (denomination) of the native asset to swap to
+         */
         ask_denom: string;
+        /**
+         * The name (denomination) of the native asset to swap from
+         */
         offer_denom: string;
         [k: string]: unknown;
       };
     }
   | {
       astro_swap: {
+        /**
+         * Information about the asset we swap to
+         */
         ask_asset_info: AssetInfo;
+        /**
+         * Information about the asset being swapped
+         */
         offer_asset_info: AssetInfo;
         [k: string]: unknown;
       };
     };
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {

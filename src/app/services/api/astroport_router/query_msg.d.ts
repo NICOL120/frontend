@@ -5,6 +5,9 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes the query messages available in the contract.
+ */
 export type QueryMsg =
   | {
       config: {
@@ -13,7 +16,13 @@ export type QueryMsg =
     }
   | {
       simulate_swap_operations: {
+        /**
+         * The amount of tokens to swap
+         */
         offer_amount: Uint128;
+        /**
+         * The swap operations to perform, each swap involving a specific pool
+         */
         operations: SwapOperation[];
         [k: string]: unknown;
       };
@@ -32,21 +41,39 @@ export type QueryMsg =
  * let c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```
  */
 export type Uint128 = string;
+/**
+ * This enum describes a swap operation.
+ */
 export type SwapOperation =
   | {
       native_swap: {
+        /**
+         * The name (denomination) of the native asset to swap to
+         */
         ask_denom: string;
+        /**
+         * The name (denomination) of the native asset to swap from
+         */
         offer_denom: string;
         [k: string]: unknown;
       };
     }
   | {
       astro_swap: {
+        /**
+         * Information about the asset we swap to
+         */
         ask_asset_info: AssetInfo;
+        /**
+         * Information about the asset being swapped
+         */
         offer_asset_info: AssetInfo;
         [k: string]: unknown;
       };
     };
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {

@@ -7,12 +7,31 @@
 
 export type Cw20HookMsg = {
   execute_swap_operations: {
+    /**
+     * Max spread
+     */
+    max_spread?: Decimal | null;
+    /**
+     * The minimum amount of tokens to get from a swap
+     */
     minimum_receive?: Uint128 | null;
+    /**
+     * A vector of swap operations
+     */
     operations: SwapOperation[];
+    /**
+     * The recipient
+     */
     to?: string | null;
     [k: string]: unknown;
   };
 };
+/**
+ * A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0
+ *
+ * The greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)
+ */
+export type Decimal = string;
 /**
  * A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.
  *
@@ -27,21 +46,39 @@ export type Cw20HookMsg = {
  * let c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```
  */
 export type Uint128 = string;
+/**
+ * This enum describes a swap operation.
+ */
 export type SwapOperation =
   | {
       native_swap: {
+        /**
+         * The name (denomination) of the native asset to swap to
+         */
         ask_denom: string;
+        /**
+         * The name (denomination) of the native asset to swap from
+         */
         offer_denom: string;
         [k: string]: unknown;
       };
     }
   | {
       astro_swap: {
+        /**
+         * Information about the asset we swap to
+         */
         ask_asset_info: AssetInfo;
+        /**
+         * Information about the asset being swapped
+         */
         offer_asset_info: AssetInfo;
         [k: string]: unknown;
       };
     };
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {

@@ -1,7 +1,7 @@
-import { NgModule } from '@angular/core';
-import { APOLLO_NAMED_OPTIONS } from 'apollo-angular';
-import { ApolloClientOptions, DefaultOptions, InMemoryCache } from '@apollo/client/core';
-import { HttpLink } from 'apollo-angular/http';
+import {NgModule} from '@angular/core';
+import {APOLLO_NAMED_OPTIONS} from 'apollo-angular';
+import {ApolloClientOptions, DefaultOptions, InMemoryCache} from '@apollo/client/core';
+import {HttpLink} from 'apollo-angular/http';
 
 const defaultOptions: DefaultOptions = {
   watchQuery: {
@@ -14,33 +14,13 @@ const defaultOptions: DefaultOptions = {
 
 export function createApollo(httpLink: HttpLink): Record<string, ApolloClientOptions<any>> {
   return {
-    mirror: {
-      link: httpLink.create({ uri: 'https://graph.mirror.finance/graphql' }),
+    astroport_mainnet: {
+      link: httpLink.create({uri: 'https://terra2-api.astroport.fi/graphql'}),
       cache: new InMemoryCache(),
       defaultOptions,
     },
-    mirrorTest: {
-      link: httpLink.create({ uri: 'https://graph.mirror.finance/graphql' }), // bombay graph is down
-      cache: new InMemoryCache(),
-      defaultOptions,
-    },
-    anchor: {
-      link: httpLink.create({ uri: 'https://mantle.anchorprotocol.com/graphql' }),
-      cache: new InMemoryCache(),
-      defaultOptions,
-    },
-    anchorTest: {
-      link: httpLink.create({ uri: 'https://bombay-mantle.anchorprotocol.com/graphql' }),
-      cache: new InMemoryCache(),
-      defaultOptions,
-    },
-    nexus: {
-      link: httpLink.create({ uri: 'https://api.nexusprotocol.app/graphql' }),
-      cache: new InMemoryCache(),
-      defaultOptions,
-    },
-    astroport: {
-      link: httpLink.create({ uri: 'https://api.astroport.fi/graphql' }),
+    astroport_testnet: {
+      link: httpLink.create({uri: 'https://terra2-develop-api.astroport.fi/graphql'}),
       cache: new InMemoryCache(),
       defaultOptions,
     },
@@ -56,4 +36,5 @@ export function createApollo(httpLink: HttpLink): Record<string, ApolloClientOpt
     },
   ],
 })
-export class GraphQLModule { }
+export class GraphQLModule {
+}

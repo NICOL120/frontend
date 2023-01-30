@@ -6,7 +6,7 @@
  */
 
 /**
- * We currently take no arguments for migrations
+ * This structure describes a migration message. We currently take no arguments for migrations.
  */
 export interface MigrateMsg {
   [k: string]: unknown;

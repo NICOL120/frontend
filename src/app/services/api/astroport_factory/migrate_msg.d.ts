@@ -6,8 +6,16 @@
  */
 
 /**
- * We currently take no arguments for migrations
+ * Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.
+ *
+ * This is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>
+ */
+export type Binary = string;
+
+/**
+ * This structure stores the parameters used in a migration message.
  */
 export interface MigrateMsg {
+  params: Binary;
   [k: string]: unknown;
 }

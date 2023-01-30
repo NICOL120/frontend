@@ -14,11 +14,37 @@
           <img src="/assets/WalletConnect.png" /> Wallet Connect
       </button>
       <ng-container *ngFor="let walletExtensionInstall of walletExtensionsForInstall">
-        <a type="button" *ngIf="!findWalletExtensionIdentifier(walletExtensionInstall.identifier) && !isPhoneOrTablet" class="btn btn-connect" href="{{walletExtensionInstall.installUrl}}" target="_blank">
+        <a type="button" *ngIf="!findWalletExtensionIdentifier(walletExtensionInstall.identifier) && !isPhoneOrTablet" class="btn btn-connect" href="{{walletExtensionInstall.url}}" target="_blank">
           <img [src]="walletExtensionInstall.icon" /> Install {{walletExtensionInstall.name}}
           <i class="fas fa-info-circle info-icon super" *ngIf="walletExtensionInstall.identifier === 'xdefi-wallet'"
              [mdbTooltip]="'If installed, please turn on Prioritise XDEFI to allow connection'"></i>
         </a>
       </ng-container>
+        <form #formViewOnly="ngForm" novalidate>
+        <div class="input-group">
+            <input [(ngModel)]="viewOnlyAddress" name="viewOnlyAddress" class="form-control fix-border"
+                   placeholder="Input Terra Address" pattern="(^terra1[a-z0-9]{38}$)|(^terra1[a-z0-9]{58}$)" #viewOnlyAddressCtl="ngModel"
+                   [class.is-invalid]="(formViewOnly.submitted || viewOnlyAddressCtl.touched) && viewOnlyAddressCtl.invalid">
+            <div class="dropdown btn-group"
+                 mdbDropdown>
+                <button aria-expanded="false" class="btn btn-max last" mdbDropdownToggle type="button" [disabled]="viewOnlyAddressCtl.invalid">
+                    View
+                </button>
+                <ul class="dropdown-menu" mdbDropdownMenu>
+                    <li>
+                        <a (click)="connectViewOnly('mainnet')"
+                           class="dropdown-item" type="submit">Mainnet</a>
+                    </li>
+                    <li>
+                        <a (click)="connectViewOnly('testnet')"
+                           class="dropdown-item" type="submit">Testnet</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <span *ngIf="viewOnlyAddressCtl.errors?.pattern" class="invalid-feedback-custom">
+            Invalid Terra address
+        </span>
+        </form>
     </div>
 </div>

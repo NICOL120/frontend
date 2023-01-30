@@ -20,7 +20,13 @@
  */
 export type Uint128 = string;
 
+/**
+ * This structure describes a custom struct to return a query response containing the end amount of a swap simulation
+ */
 export interface SimulateSwapOperationsResponse {
+  /**
+   * The amount of tokens received in a swap simulation
+   */
   amount: Uint128;
   [k: string]: unknown;
 }

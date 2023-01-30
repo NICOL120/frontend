@@ -5,15 +5,30 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes the execute messages available in the contract.
+ */
 export type ExecuteMsg =
   | {
       receive: Cw20ReceiveMsg;
     }
   | {
       provide_liquidity: {
-        assets: [Asset, Asset];
+        /**
+         * The assets available in the pool
+         */
+        assets: [Description, Description];
+        /**
+         * Determines whether the LP tokens minted for the user is auto_staked in the Generator contract
+         */
         auto_stake?: boolean | null;
+        /**
+         * The receiver of LP tokens
+         */
         receiver?: string | null;
+        /**
+         * The slippage tolerance that allows liquidity provision only if the price in the pool doesn't move too much
+         */
         slippage_tolerance?: Decimal | null;
         [k: string]: unknown;
       };
@@ -22,7 +37,7 @@ export type ExecuteMsg =
       swap: {
         belief_price?: Decimal | null;
         max_spread?: Decimal | null;
-        offer_asset: Asset;
+        offer_asset: Description;
         to?: string | null;
         [k: string]: unknown;
       };
@@ -53,6 +68,9 @@ export type Uint128 = string;
  * This is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>
  */
 export type Binary = string;
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {
@@ -92,8 +110,17 @@ export interface Cw20ReceiveMsg {
   sender: string;
   [k: string]: unknown;
 }
-export interface Asset {
+/**
+ * This enum describes a Terra asset (native or CW20).
+ */
+export interface Description {
+  /**
+   * A token amount
+   */
   amount: Uint128;
+  /**
+   * Information about an asset stored in a [`AssetInfo`] struct
+   */
   info: AssetInfo;
   [k: string]: unknown;
 }

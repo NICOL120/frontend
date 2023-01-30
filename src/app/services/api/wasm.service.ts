@@ -1,6 +1,14 @@
-import { Injectable } from '@angular/core';
-import { Coin, Coins, MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract, MsgStoreCode, MsgUpdateContractAdmin } from '@terra-money/terra.js';
-import { ExecuteOptions, TerrajsService } from '../terrajs.service';
+import {Injectable} from '@angular/core';
+import {
+  Coin,
+  Coins,
+  MsgExecuteContract,
+  MsgInstantiateContract,
+  MsgMigrateContract,
+  MsgStoreCode,
+  MsgUpdateContractAdmin
+} from '@terra-money/terra.js';
+import {ExecuteOptions, TerrajsService} from '../terrajs.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,14 +17,13 @@ export class WasmService {
 
   constructor(
     public terrajs: TerrajsService,
-  ) { }
+  ) {
+  }
 
   query(contract: string, msg: object) {
-    if (this.terrajs.USE_NEW_BASE64_API) {
-      return this.terrajs.get(`terra/wasm/v1beta1/contracts/${contract}/store`,
-        { query_msg: Buffer.from(JSON.stringify(msg), 'utf-8').toString('base64') });
-    } else {
-      return this.terrajs.get(`wasm/contracts/${contract}/store`, { query_msg: JSON.stringify(msg) });
+    if (contract) {
+      // console.log(contract, msg);
+      return this.terrajs.lcdClient.wasm.contractQuery<any>(contract, msg);
     }
   }
 
@@ -27,13 +34,14 @@ export class WasmService {
     ));
   }
 
-  instantiate(codeId: number, initMsg: object, opts?: ExecuteOptions) {
+  instantiate(codeId: number, initMsg: object, label: string, opts?: ExecuteOptions) {
     return this.terrajs.post(new MsgInstantiateContract(
       this.terrajs.address,
       this.terrajs.address,
       codeId,
       initMsg,
-      new Coins(opts?.coin ? [Coin.fromData(opts.coin)] : [])
+      new Coins(opts?.coin ? [Coin.fromData(opts.coin)] : []),
+      label
     ));
   }
 

@@ -5,18 +5,36 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This structure describes the execute messages of the contract.
+ */
 export type ExecuteMsg =
   | {
       update_config: {
+        /**
+         * Contract address to send governance fees to (the Maker)
+         */
         fee_address?: string | null;
+        /**
+         * Contract address where Lp tokens can be auto_staked after someone provides liquidity in an incentivized Astroport pool
+         */
         generator_address?: string | null;
-        owner?: string | null;
+        /**
+         * CW20 token contract code identifier
+         */
         token_code_id?: number | null;
+        /**
+         * CW1 whitelist contract code id used to store 3rd party rewards for staking Astroport LP tokens
+         */
+        whitelist_code_id?: number | null;
         [k: string]: unknown;
       };
     }
   | {
       update_pair_config: {
+        /**
+         * New [`PairConfig`] settings for a pair type
+         */
         config: PairConfig;
         [k: string]: unknown;
       };
@@ -24,7 +42,7 @@ export type ExecuteMsg =
   | {
       create_pair: {
         /**
-         * Asset infos
+         * The two assets to create the pool for
          */
         asset_infos: [AssetInfo, AssetInfo];
         /**
@@ -32,7 +50,7 @@ export type ExecuteMsg =
          */
         init_params?: Binary | null;
         /**
-         * Type of pair contract
+         * The pair type (exposed in [`PairType`])
          */
         pair_type: PairType;
         [k: string]: unknown;
@@ -40,10 +58,39 @@ export type ExecuteMsg =
     }
   | {
       deregister: {
+        /**
+         * The assets for which we deregister a pool
+         */
         asset_infos: [AssetInfo, AssetInfo];
         [k: string]: unknown;
       };
+    }
+  | {
+      propose_new_owner: {
+        /**
+         * The date after which this proposal expires
+         */
+        expires_in: number;
+        /**
+         * Newly proposed contract owner
+         */
+        owner: string;
+        [k: string]: unknown;
+      };
+    }
+  | {
+      drop_ownership_proposal: {
+        [k: string]: unknown;
+      };
+    }
+  | {
+      claim_ownership: {
+        [k: string]: unknown;
+      };
     };
+/**
+ * This enum describes available pair types. ## Available pool types ``` # use astroport::factory::PairType::{Custom, Stable, Xyk}; Xyk {}; Stable {}; Custom(String::from("Custom")); ```
+ */
 export type PairType =
   | {
       xyk: {
@@ -58,6 +105,9 @@ export type PairType =
   | {
       custom: string;
     };
+/**
+ * This enum describes available Token types. ## Examples ``` # use cosmwasm_std::Addr; # use astroport::asset::AssetInfo::{NativeToken, Token}; Token { contract_addr: Addr::unchecked("terra...") }; NativeToken { denom: String::from("uluna") }; ```
+ */
 export type AssetInfo =
   | {
       token: {
@@ -88,11 +138,33 @@ export type Addr = string;
  */
 export type Binary = string;
 
+/**
+ * This structure stores a pair type's configuration.
+ */
 export interface PairConfig {
+  /**
+   * ID of contract which is allowed to create pairs of this type
+   */
   code_id: number;
-  is_disabled?: boolean | null;
+  /**
+   * Whether a pair type is disabled or not. If it is disabled, new pairs cannot be created, but existing ones can still read the pair configuration
+   */
+  is_disabled: boolean;
+  /**
+   * Setting this to true means that pairs of this type will not be able to get an ASTRO generator
+   */
+  is_generator_disabled: boolean;
+  /**
+   * The amount of fees (in bps) collected by the Maker contract from this pair type
+   */
   maker_fee_bps: number;
+  /**
+   * The pair type (provided in a [`PairType`])
+   */
   pair_type: PairType;
+  /**
+   * The total fees (in bps) charged by a pair of this type
+   */
   total_fee_bps: number;
   [k: string]: unknown;
 }

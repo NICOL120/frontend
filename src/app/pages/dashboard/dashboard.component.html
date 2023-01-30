@@ -18,7 +18,7 @@
             </p>
             <h3 class="card-title">
               <span>{{ +this.displayData?.tvl?.total || 0 | unit: 6: '1.0-2' }}</span><span
-              class="cur-title"> UST</span>
+              class="cur-title"> USD</span>
               <i class="fas fa-info-circle info-icon margin-left-auto float-end md-icon mg-18 sub-topic"
                  mdbTooltip="Total value of provided liquidity and staked SPEC"></i>
             </h3>
@@ -38,12 +38,12 @@
                   <div class="legend">
                     <p class="card-text sub-topic">LP Vaults</p>
                     <div class="sq-color bg-top-card-lpVaults"></div>
-                    <span class="card-text sub-topic img-txt">{{ this.tvlData?.lpVaults.shortValue }} UST</span>
+                    <span class="card-text sub-topic img-txt">{{ this.tvlData?.lpVaults.shortValue }} USD</span>
                   </div>
                   <div class="legend">
                     <p class="card-text sub-topic">Gov</p>
                     <div class="sq-color bg-top-card-gov"></div>
-                    <span class="card-text sub-topic img-txt">{{ this.tvlData?.gov.shortValue }} UST</span>
+                    <span class="card-text sub-topic img-txt">{{ this.tvlData?.gov.shortValue }} USD</span>
                   </div>
                 </div>
               </div>
@@ -59,7 +59,7 @@
                 Market Cap
               </p>
               <h3 class="card-title">
-                <span>{{ +this.displayData?.spec?.marketCap || 0 | unit: 6: '1.0-2' }}</span><span class="cur-title"> UST</span>
+                <span>{{ +this.displayData?.spec?.marketCap || 0 | unit: 6: '1.0-2' }}</span><span class="cur-title"> USD</span>
               </h3>
             </div>
             <div class="float-end pe-2">
@@ -75,7 +75,7 @@
                     SPEC Price
                   </p>
                   <h3 class="card-title">
-                    <span>{{ +this.displayData?.spec?.price || 0 | shortNum }}</span><span class="cur-title"> UST</span>
+                    <span>{{ +this.displayData?.spec?.price || 0 | shortNum }}</span><span class="cur-title"> USD</span>
                     <a class="text-light small"
                        href="https://coinhall.org/charts/terra/terra1tn8ejzw8kpuc87nu42f6qeyen4c7qy35tl8t20"
                        alt="SPEC price chart" title="SPEC price chart" target="_blank">
@@ -256,7 +256,7 @@
             </p>
             <h3 class="card-title">
               <span>{{ this.displayData?.stat?.total?.earning | unit: 6: '1.0-2' }}</span><span
-              class="cur-title"> UST</span>
+              class="cur-title"> USD</span>
             </h3>
             <p class="card-text sub-topic mt-3">
               Buyback
@@ -281,7 +281,7 @@
             </p>
             <h3 class="card-title">
               <span>{{ this.displayData?.stat?.last7?.earning | unit: 6: '1.0-2' }}</span><span
-              class="cur-title"> UST</span>
+              class="cur-title"> USD</span>
             </h3>
             <p class="card-text sub-topic mt-3">
               Buyback (7d)

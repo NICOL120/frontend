@@ -9,36 +9,26 @@ import {PairInfo} from '../../services/api/terraswap_factory/pair_info';
 import {GoogleAnalyticsService} from 'ngx-google-analytics';
 import {MdbModalService} from 'mdb-angular-ui-kit/modal';
 import {MdbDropdownDirective} from 'mdb-angular-ui-kit/dropdown';
+import { AssetInfo } from '../../services/api/astroport_pair/pair_info';
 
 export interface Vault {
   baseSymbol: string;
   denomSymbol: string;
-  rewardSymbol: string;
   baseDecimals: number;
   baseUnit: number;
-  baseAssetInfo: object;
+  baseAssetInfo: AssetInfo;
   denomDecimals: number;
   denomUnit: number;
-  denomAssetInfo: object;
+  denomAssetInfo: AssetInfo;
   lpToken: string;
   pairInfo: PairInfo;
   poolInfo: PoolInfo;
   pairStat: PairStat;
-  farmApy: number;
-  specApy: number;
-  compoundApy: number;
-  stakeApy: number;
-  apy: number;
   name: string;
   unitDisplay: string;
-  unitDisplayDexAbbreviated: string;
   shortUnitDisplay: string;
   score: number;
-  fullName: string;
   disabled: boolean;
-  will_available_at_astroport: boolean;
-  now_available_at_astroport: boolean;
-  proxy_reward_not_yet_available: boolean;
   poolAprTotal: number;
 }
 
@@ -56,7 +46,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   search: string;
   showDepositedPoolOnly = false;
   defaultSortBy: SORT_BY = 'multiplier';
-  defaultActiveFarm = 'All farms';
+  defaultActiveFarm = 'Active farms';
   sortBy: SORT_BY = this.defaultSortBy;
   activeFarm = this.defaultActiveFarm;
   UNIT = CONFIG.UNIT;
@@ -73,7 +63,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   private lastSortBy: SORT_BY;
   private lastActiveFarm: string;
 
-  private BLACKLIST: Set<string> = new Set(['Starterra']);
+  private BLACKLIST: Set<string> = new Set(['']);
 
 
   constructor(
@@ -92,8 +82,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     this.connected = this.terrajs.connected
       .subscribe(async connected => {
         this.loading = true;
-        this.info.updateVaults();
-        this.info.refreshPool();
+        this.info.refreshSPECPool();
         await this.info.initializeVaultData(connected);
         this.refresh(true);
         this.loading = false;
@@ -115,8 +104,8 @@ export class VaultComponent implements OnInit, OnDestroy {
       if (this.loading || !i || document.hidden) {
         return;
       }
-      if (i % 10 === 0) {
-        await Promise.all([this.info.refreshPool(), this.info.retrieveCachedStat(true)]);
+      if (i % 5 === 0) {
+        await Promise.all([this.info.refreshSPECPool(), this.info.retrieveCachedStat(true)]);
         if (this.terrajs.isConnected) {
           await this.info.refreshRewardInfos();
           if (this.showDepositedPoolOnly) {
@@ -172,19 +161,17 @@ export class VaultComponent implements OnInit, OnDestroy {
   @debounce(250)
   refresh(resetFilterOnEmpty?: boolean) {
     let vaults = this.activeFarm === 'Active farms'
-      ? this.info.allVaults.filter(vault => !vault.disabled || (this.terrajs.isConnected && vault.disabled && +this.info.rewardInfos[vault.poolInfo.key]?.bond_amount > 10))
-      : this.activeFarm === 'All farms' 
-        ? this.info.allVaults
+      ? this.info.allVaults.filter(vault => !vault.disabled || (this.terrajs.isConnected && +this.info.rewardInfos[vault.poolInfo.key]?.bond_amount > 10))
       : this.activeFarm === 'Disabled farms'
-        ? this.info.allVaults.filter(vault => vault.disabled) 
-      : this.info.allVaults.filter(vault => vault.poolInfo.farm === this.activeFarm && !vault.disabled);
+        ? this.info.allVaults.filter(vault => vault.disabled)
+        : this.info.allVaults.filter(vault => vault.poolInfo.farm === this.activeFarm && !vault.disabled);
     if (this.lastSortBy !== this.sortBy || this.lastActiveFarm !== this.activeFarm || !this.search) {
       switch (this.sortBy) {
         case 'multiplier':
           vaults.sort((a, b) => b.score - a.score);
           break;
         case 'apy':
-          vaults.sort((a, b) => b.apy - a.apy);
+          vaults.sort((a, b) => (b.pairStat?.poolApy || 0) - (a.pairStat?.poolApy || 0));
           break;
         case 'dpr':
           vaults.sort((a, b) => (b.pairStat?.dpr || 0) - (a.pairStat?.dpr || 0));

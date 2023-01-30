@@ -3,52 +3,47 @@
     <a class="navbar-brand" routerLink="/"><img class="logo" src="/assets/spec_logo.svg"/></a>
     <!-- Left links -->
     <ul class="navbar-nav d-none d-md-flex">
-      <li class="nav-item">
-        <a class="nav-link text-center" routerLink="/dashboard" routerLinkActive="active"><i
-          class="fas fa-tachometer-alt"></i> Dashboard</a>
-      </li>
+      <!--      <li class="nav-item">-->
+      <!--        <a class="nav-link text-center" routerLink="/dashboard" routerLinkActive="active"><i-->
+      <!--          class="fas fa-tachometer-alt"></i> Dashboard</a>-->
+      <!--      </li>-->
       <li class="nav-item">
         <a class="nav-link text-center" routerLink="/vaults" routerLinkActive="active"><i class="fas fa-shield-alt"></i>
           Vaults</a>
       </li>
+<!--      <li class="nav-item">-->
+<!--        <a [href]="tradeSpecUrl" class="nav-link text-center" target="_blank"><i-->
+<!--          class="fas fa-exchange-alt"></i> Trade SPEC</a>-->
+<!--      </li>-->
       <li class="nav-item">
-        <a class="nav-link text-center" routerLink="/trade" routerLinkActive="active"><i
-          class="fas fa-exchange-alt"></i> Trade SPEC</a>
+        <a class="nav-link text-center" routerLink="/airdrop" routerLinkActive="active"><i class="fas fa-parachute-box"></i>
+          Airdrop</a>
       </li>
+      <!--      <li class="nav-item">-->
+      <!--        <a class="nav-link text-center" routerLink="/gov" routerLinkActive="active"><i class="fas fa-balance-scale"></i>-->
+      <!--          Gov</a>-->
+      <!--      </li>-->
       <li class="nav-item">
-        <a class="nav-link text-center" routerLink="/gov" routerLinkActive="active"><i class="fas fa-balance-scale"></i>
-          Gov</a>
+        <a class="nav-link text-center" href="https://classic.spec.finance" target="_blank"><i class="fas fa-archive"></i>
+          Spectrum Classic</a>
       </li>
 
     </ul>
-    <div class="collapse navbar-collapse d-md-none" mdbDropdown>
-      <button class="btn btn-dark dropdown-toggle btn-sm" mdbDropdownToggle type="button">
-        <i class="fas fa-handshake"></i>&nbsp;<span class="text-muted d-md-inline">Partners</span>
-      </button>
-      <ul aria-labelledby="dropdownMenuButton" class="dropdown-menu dropdown-menu-end" mdbDropdownMenu>
-        <li>
-          <a class="dropdown-item" href="https://aperture.finance/?ref=Spectrum" target="_blank">
-            <img alt="Aperture" class="partner-icon" src="assets/aperture.png">
-            Aperture Finance - mAssets delta-neutral
-          </a>
-        </li>
-      </ul>
-    </div>
     <!-- Left links -->
 
     <!--- right links -->
     <div #dropdown *ngIf="terrajs.address" class="dropdown" mdbDropdown>
       <button class="btn btn-dark dropdown-toggle btn-sm" mdbDropdownToggle type="button">
         <i class="fas fa-wallet"></i>&nbsp;<span class="text-muted d-none d-md-inline">{{ tnsName || walletText }}
-        <span *ngIf="terrajs.networkName !== 'mainnet'" class="text-danger"> ({{terrajs.networkName}})</span>&nbsp;|&nbsp;</span>
-        {{info.userUstAmount | number : '1.0-2'}} UST
+        <span *ngIf="terrajs.networkName !== 'mainnet'" class="text-danger"> ({{terrajs.networkName}})</span><span *ngIf="terrajs.isReadOnly" class="text-danger"> (View Only)</span>&nbsp;|&nbsp;</span>
+        {{info.tokenBalances['uluna'] | unit: 6 | number : '1.0-2'}} LUNA
       </button>
       <ul aria-labelledby="dropdownMenuButton" class="dropdown-menu dropdown-menu-end" mdbDropdownMenu>
-        <li>
-          <a aria-disabled="true" class="dropdown-item disabled" href="#" tabindex="-1">
-            SPEC: {{ info.userSpecAmount | number: '1.0-2' }}
-          </a>
-        </li>
+<!--        <li>-->
+<!--          <a aria-disabled="true" class="dropdown-item disabled" href="#" tabindex="-1">-->
+<!--            SPEC: {{ info.userSpecAmount | number: '1.0-2' }}-->
+<!--          </a>-->
+<!--        </li>-->
         <li>
           <a aria-disabled="true" class="dropdown-item disabled d-md-none" href="#" tabindex="-1">
             {{ tnsName || walletText}}
@@ -57,12 +52,9 @@
         <li>
           <button (click)="copy()" class="dropdown-item" type="button">Copy address</button>
         </li>
-        <li *ngIf="tnsName">
-          <button (click)="copyTNS()" class="dropdown-item" type="button">Copy TNS address</button>
-        </li>
         <li><a (click)="dropdown.hide()"
                class="dropdown-item"
-               href="https://{{terrajs.settings.finder}}/{{terrajs.networkName}}/account/{{terrajs.address}}"
+               href="{{terrajs.settings.finder}}/{{terrajs.networkName}}/account/{{terrajs.address}}"
                target="_blank">View on Terra Finder</a></li>
         <li class="dropdown-item">
           <div class="solid-line"></div>
@@ -96,27 +88,28 @@
 <div #mobileMenu="mdbCollapse" class="collapse navbar-collapse d-md-none" id="navbarToggleMobileMenu" mdbCollapse>
   <div class="container-fluid justify-content-center">
     <ul class="navbar-nav">
-      <li class="nav-item ms-1 me-1">
-        <a (click)="mobileMenu.hide()" class="nav-link" routerLink="/dashboard" routerLinkActive="active"><i
-          class="fas fa-tachometer-alt"></i> Dashboard</a>
-      </li>
+      <!--      <li class="nav-item ms-1 me-1">-->
+      <!--        <a (click)="mobileMenu.hide()" class="nav-link" routerLink="/dashboard" routerLinkActive="active"><i-->
+      <!--          class="fas fa-tachometer-alt"></i> Dashboard</a>-->
+      <!--      </li>-->
       <li class="nav-item ms-1 me-1">
         <a (click)="mobileMenu.hide()" class="nav-link" routerLink="/vaults" routerLinkActive="active"><i
           class="fas fa-shield-alt"></i> Vaults</a>
       </li>
-      <li class="nav-item ms-1 me-1">
-        <a (click)="mobileMenu.hide()" class="nav-link" routerLink="/trade" routerLinkActive="active"><i
-          class="fas fa-exchange-alt"></i> Trade SPEC</a>
+<!--      <li class="nav-item ms-1 me-1">-->
+<!--        <a (click)="mobileMenu.hide()" [href]="tradeSpecUrl" class="nav-link" target="_blank"><i-->
+<!--          class="fas fa-exchange-alt"></i> Trade SPEC</a>-->
+<!--      </li>-->
+      <li class="nav-item">
+        <a class="nav-link text-center" routerLink="/airdrop" routerLinkActive="active"><i class="fas fa-parachute-box"></i>
+          Airdrop</a>
       </li>
-      <li class="nav-item ms-1 me-1">
-        <a (click)="mobileMenu.hide()" class="nav-link" routerLink="/gov" routerLinkActive="active"><i
-          class="fas fa-balance-scale"></i> Gov</a>
-      </li>
-      <li class="nav-item ms-1 me-1">
-        <a class="nav-link" href="https://aperture.finance/?ref=Spectrum" target="_blank">
-          <img alt="Aperture" class="partner-icon" src="assets/aperture.png">
-          Aperture Finance - mAssets delta-neutral
-        </a>
+      <!--      <li class="nav-item ms-1 me-1">-->
+      <!--        <a (click)="mobileMenu.hide()" class="nav-link" routerLink="/gov" routerLinkActive="active"><i-->
+      <!--          class="fas fa-balance-scale"></i> Gov</a>-->
+      <!--      </li>-->
+      <li class="nav-item">
+        <a (click)="mobileMenu.hide()" class="nav-link text-center" href="https://classic.spec.finance" target="_blank">Spectrum Classic</a>
       </li>
     </ul>
   </div>
