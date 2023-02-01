@@ -6,6 +6,7 @@
 }
 
 .modal-footer {
+    display: flex;
     justify-content: center;
 }
 
@@ -16,39 +17,42 @@
 }
 
 .gas {
+    display: flex;
     align-self: center;
 }
 
-::ng-deep {
-    .gas-slider-adjustment .ngx-slider {
-      margin-top: 0.7em;
-      .ngx-slider-bar {
-        background: $white;
-        height: 5px;
-      }
-      .ngx-slider-pointer {
-        width: 16px;
-        height: 16px;
-        top: auto;
-        bottom: -8px;
-        background-color: $primary;
-        &:focus {
-          outline-style: none !important;
-          outline-width: 0 !important;
-        }
-        &:after {
-          display: none;
-        }
-      }
-      .ngx-slider-bubble {
-        display: none;
-      }
-    }
-  }
+.gas-slider-adjustment .ngx-slider {
+    margin-top: 0.7em;
+}
 
-.coins-fee-select{
-  background-color: $gray-990;
-  color: white;
-  border: 1px solid white;
-  margin-left: 0.5em;
+.gas-slider-adjustment .ngx-slider .ngx-slider-bar {
+    background: $white;
+    height: 5px;
+}
+
+.gas-slider-adjustment .ngx-slider .ngx-slider-pointer {
+    width: 16px;
+    height: 16px;
+    bottom: -8px;
+    background-color: $primary;
+}
+
+.gas-slider-adjustment .ngx-slider .ngx-slider-pointer:focus {
+    outline-style: none !important;
+    outline-width: 0 !important;
+}
+
+.gas-slider-adjustment .ngx-slider .ngx-slider-pointer:after {
+    display: none;
+}
+
+.gas-slider-adjustment .ngx-slider .ngx-slider-bubble {
+    display: none;
+}
+
+.coins-fee-select {
+    background-color: $gray-990;
+    color: white;
+    border: 1px solid white;
+    margin-left: 0.5em;
 }
